@@ -9,12 +9,13 @@
 #include "Joystick.h"
 
 
-Joystick::Joystick(uint8_t PinNumber, uint8_t Polar, uint8_t range, bool Revert, uint32_t SamplingPeriod):
+Joystick::Joystick(uint8_t PinNumber, uint8_t Polar, uint8_t range, bool Revert, uint32_t SamplingPeriod,uint32_t DeadBand):
 	pin(PinNumber),
 	Polarity(Polar),
 	revert_speed(Revert),
 	range(range),
-	SamplingPeriod(SamplingPeriod)
+	SamplingPeriod(SamplingPeriod),
+	Joystick_dead_band(DeadBand)
 {
 	// cleanup
 	this->reference  = 0;	
@@ -27,6 +28,11 @@ Joystick::Joystick(uint8_t PinNumber, uint8_t Polar, uint8_t range, bool Revert,
 	for(uint8_t i=0;i<range;i++)
 		this->MaxValue |= (1<<i);	// allume les bits jusqu'à range-1
 }
+
+void Joystick::begin() {
+	begin(this->SamplingPeriod);
+}
+
 void Joystick::begin(uint32_t Period) {
 	this->reference = analogRead(this->pin);
 	this->SamplingPeriod = Period;
