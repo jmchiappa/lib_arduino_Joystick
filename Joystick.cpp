@@ -9,13 +9,14 @@
 #include "Joystick.h"
 
 
-Joystick::Joystick(uint8_t PinNumber, uint8_t Polar, uint8_t range, bool Revert, uint32_t SamplingPeriod,uint32_t DeadBand):
+Joystick::Joystick(uint8_t PinNumber, uint8_t Polar, uint8_t range, bool Revert, uint32_t SamplingPeriod,uint32_t DeadBand, uint8_t mark):
 	pin(PinNumber),
 	Polarity(Polar),
 	revert_speed(Revert),
 	range(range),
 	SamplingPeriod(SamplingPeriod),
-	Joystick_dead_band(DeadBand)
+	Joystick_dead_band(DeadBand),
+	_mark(mark)
 {
 	// cleanup
 	this->reference  = 0;	
@@ -93,51 +94,58 @@ uint32_t Joystick::getMotorSpeed() {
 }
 
 void Joystick::setSpeedValue(int32_t joystick_input){
-
+	uint32_t tmp_output;
+	uint8_t tmp_direction;
 	PRINT("joystick input =",joystick_input);
     if (joystick_input>=(int32_t)Joystick_dead_band) {
     	// positif et au-dessus de la bande morte
-    	this->output_speed = map(joystick_input,Joystick_dead_band,1023-this->reference,0, this->MaxValue);
+    	tmp_output = map(joystick_input,Joystick_dead_band,1023-this->reference,0, this->MaxValue);
     	// PRINTLN(" Positif : intermédiaire 1 ",this->output_speed);
 
     	// OUTPUT est compris entre 0 et 2^range-1
 
     	// Applique le coefficient de sortie
-		this->output_speed=(this->output_speed*MaxOutputSpeedCoef) / 100;
-		this->output_direction = FORWARD;
+		tmp_output=(tmp_output*MaxOutputSpeedCoef) / 100;
+		tmp_direction = FORWARD;
     	// Si le mode Revert est actif il faut inverser la sortie
     	if(this->Polarity == BACKWARD_WHEN_POSITIVE) {
-    		this->output_speed = MaxValue - this->output_speed;
-    		this->output_direction = BACKWARD;
+    		tmp_output = MaxValue - tmp_output;
+    		tmp_direction = BACKWARD;
 	    	// PRINTLN(" Positif : intermédiaire 2 ",this->output_speed);
 	    	// PRINTLN(" Positif : intermédiaire 2 - dir=",this->output_direction);
     	}
     } else if (joystick_input<=-(int32_t)Joystick_dead_band) {
 
     	// négatif et au-dessous de la bande morte
-		this->output_speed = map(joystick_input,-reference,-Joystick_dead_band,this->MaxValue,0);
+		tmp_output = map(joystick_input,-reference,-Joystick_dead_band,this->MaxValue,0);
     	// PRINTLN(" Négatif : intermédiaire 1 ",this->output_speed);
 
     	// Applique le coefficient de sortie
-		this->output_speed=(this->output_speed*MaxOutputSpeedCoef) / 100;
+		tmp_direction=(tmp_direction*MaxOutputSpeedCoef) / 100;
 
 
 		if(this->Polarity == FORWARD_WHEN_POSITIVE) {
-			this->output_direction = BACKWARD;
+			tmp_direction = BACKWARD;
 			// Ajoute l'offset pour une sortie 
-			this->output_speed = MaxValue - output_speed;
+			tmp_output = MaxValue - tmp_output;
 	    	// PRINTLN(" Négatif : intermédiaire 2 ",this->output_speed);
 		} else {
 			// on ne change pas l'offset et la direction est avant
-			this->output_direction = FORWARD;
+			tmp_direction = FORWARD;
 	    	// PRINT(" Négatif : intermédiaire 3 ",this->output_speed);
 	    	// PRINTLN(" Négatif : intermédiaire 3 - dir =",this->output_direction);
 		}
     } else {
     	// PRINTLN(" Nul","");    	
     	// dans la bande morte, vitesse nulle
-    	this->output_direction=FORWARD;
-    	this->output_speed=0;
+    	tmp_direction=FORWARD;
+    	tmp_output=0;
+    }
+
+    // Finally apply only if it isn't a marker value
+    if(tmp_direction!=_mark) {
+    	this->output_speed = tmp_output;
+    	this->output_direction = tmp_direction;
     }
 }
 
