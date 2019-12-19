@@ -143,7 +143,7 @@ void Joystick::setSpeedValue(int32_t joystick_input){
     }
 
     // Finally apply only if it isn't a marker value
-    if(tmp_direction!=_mark) {
+    if(tmp_output!=_mark) {
     	this->output_speed = tmp_output;
     	this->output_direction = tmp_direction;
     }
