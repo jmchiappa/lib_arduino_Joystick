@@ -121,7 +121,7 @@ void Joystick::setSpeedValue(int32_t joystick_input){
     	// PRINTLN(" Négatif : intermédiaire 1 ",this->output_speed);
 
     	// Applique le coefficient de sortie
-		tmp_direction=(tmp_direction*MaxOutputSpeedCoef) / 100;
+		tmp_output=(tmp_output*MaxOutputSpeedCoef) / 100;
 
 
 		if(this->Polarity == FORWARD_WHEN_POSITIVE) {
