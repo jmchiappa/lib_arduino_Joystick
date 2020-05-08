@@ -9,7 +9,7 @@
 #include "Joystick.h"
 
 
-Joystick::Joystick(uint8_t PinNumber, uint8_t Polar, uint8_t range, bool Revert, uint32_t SamplingPeriod,uint32_t DeadBand, uint8_t mark):
+Joystick::Joystick(uint8_t PinNumber, uint8_t Polar, uint8_t range, bool Revert, uint32_t SamplingPeriod,int32_t DeadBand, uint32_t mark):
 	pin(PinNumber),
 	Polarity(Polar),
 	revert_speed(Revert),
@@ -77,7 +77,9 @@ uint32_t Joystick::getMotorSpeed() {
 		PRINT("Nbsamples :",this->nbSamples);
 		PRINT("\tsumsamples :",this->sumSamples);
 		PreviousRefreshTime = millis();
-		sumSamples/=nbSamples;
+		if(nbSamples>0) {
+			sumSamples/=nbSamples;
+		}
 		PRINT("\tsample moyen:",this->sumSamples);
 		// la dynamique du joystick est toujours sur 10 bits
 		int32_t j_value = constrain(sumSamples,0,1023);
@@ -90,17 +92,18 @@ uint32_t Joystick::getMotorSpeed() {
 		setSpeedValue(j_value);
 		// A ce point là, la variable output_speed a été mise à jour
 	}
-	return output_speed;
+	PRINTLN("vitesse : ",this->output_speed);
+	return this->output_speed;
 }
 
 void Joystick::setSpeedValue(int32_t joystick_input){
 	uint32_t tmp_output;
 	uint8_t tmp_direction;
 	PRINT("joystick input =",joystick_input);
-    if (joystick_input>=(int32_t)Joystick_dead_band) {
+    if (joystick_input>=Joystick_dead_band) {
     	// positif et au-dessus de la bande morte
     	tmp_output = map(joystick_input,Joystick_dead_band,1023-this->reference,0, this->MaxValue);
-    	// PRINTLN(" Positif : intermédiaire 1 ",this->output_speed);
+    	PRINTLN(" Positif : intermédiaire 1 ",tmp_output);
 
     	// OUTPUT est compris entre 0 et 2^range-1
 
@@ -111,14 +114,14 @@ void Joystick::setSpeedValue(int32_t joystick_input){
     	if(this->Polarity == BACKWARD_WHEN_POSITIVE) {
     		tmp_output = MaxValue - tmp_output;
     		tmp_direction = BACKWARD;
-	    	// PRINTLN(" Positif : intermédiaire 2 ",this->output_speed);
-	    	// PRINTLN(" Positif : intermédiaire 2 - dir=",this->output_direction);
+	    	PRINT(" Positif : intermédiaire 2 "," ");
+	    	PRINTLN(tmp_output,tmp_direction);
     	}
-    } else if (joystick_input<=-(int32_t)Joystick_dead_band) {
+    } else if (joystick_input<=-Joystick_dead_band) {
 
     	// négatif et au-dessous de la bande morte
 		tmp_output = map(joystick_input,-reference,-Joystick_dead_band,this->MaxValue,0);
-    	// PRINTLN(" Négatif : intermédiaire 1 ",this->output_speed);
+    	PRINTLN(" Négatif : intermédiaire 1 ",tmp_output);
 
     	// Applique le coefficient de sortie
 		tmp_output=(tmp_output*MaxOutputSpeedCoef) / 100;
@@ -128,15 +131,16 @@ void Joystick::setSpeedValue(int32_t joystick_input){
 			tmp_direction = BACKWARD;
 			// Ajoute l'offset pour une sortie 
 			tmp_output = MaxValue - tmp_output;
-	    	// PRINTLN(" Négatif : intermédiaire 2 ",this->output_speed);
+	    	PRINT(" Négatif : intermédiaire 2 "," ");
+	    	PRINTLN(tmp_output, tmp_direction);
 		} else {
 			// on ne change pas l'offset et la direction est avant
 			tmp_direction = FORWARD;
-	    	// PRINT(" Négatif : intermédiaire 3 ",this->output_speed);
-	    	// PRINTLN(" Négatif : intermédiaire 3 - dir =",this->output_direction);
+	    	PRINT(" Négatif : intermédiaire 3 ", " ");
+	    	PRINTLN(tmp_output,tmp_direction);
 		}
     } else {
-    	// PRINTLN(" Nul","");    	
+    	PRINTLN(" Nul","");    	
     	// dans la bande morte, vitesse nulle
     	tmp_direction=FORWARD;
     	tmp_output=0;
@@ -150,6 +154,7 @@ void Joystick::setSpeedValue(int32_t joystick_input){
 }
 
 uint8_t Joystick::getMotorDirection() {
+	PRINTLN(" direction : ",this->output_direction);
 	return this->output_direction;
 }
 

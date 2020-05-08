@@ -35,7 +35,7 @@ class Joystick
 {
 public:
     // Constructor
-	Joystick(uint8_t PinNumber, uint8_t Polar=FORWARD_WHEN_POSITIVE, uint8_t range=8, bool Revert = false, uint32_t SamplingPeriod = 5, uint32_t DeadBand=20, uint8_t mark=170);
+	Joystick(uint8_t PinNumber, uint8_t Polar=FORWARD_WHEN_POSITIVE, uint8_t range=8, bool Revert = false, uint32_t SamplingPeriod = 5, int32_t DeadBand=20, uint32_t mark=170);
 	void begin(uint32_t Period);
     void begin(void);
 
@@ -120,11 +120,11 @@ private:
     Dans cette zone, la vitesse est considérée nulle (soit 0, soit 2^range-1)
     Valeur exprimée en LSB d'entrée
     */
-    uint32_t Joystick_dead_band;
+    int32_t Joystick_dead_band;
     /*
     Valeur à filtrer 
     */
-    uint8_t _mark;
+    uint32_t _mark;
 };
 
 #endif
